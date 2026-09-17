@@ -230,10 +230,13 @@ eph_hog <- eph_hog %>%
                                 dom == 1 & dom_sum == 2 & CH03 >= 2 ~ 0))
 
 eph_hog <- eph_hog %>%
-  select(ANO4, CODUSU, NRO_HOGAR, CH03, dominancia)
-#VER CASOS DUPLICADOS
+  select(ANO4, CODUSU, NRO_HOGAR, COMPONENTE, CH03, dominancia)
+
+
+
 eph <- eph %>%
-  left_join(eph_hog, by = c("ANO4", "CODUSU", "NRO_HOGAR", "CH03"))
+  left_join(eph_hog, by = c("ANO4", "CODUSU", "NRO_HOGAR", "COMPONENTE", "CH03"),
+            relationship = "many-to-one")
 
 rm(eph_hog, seleccion, perdidos)
 

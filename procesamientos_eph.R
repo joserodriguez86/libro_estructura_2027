@@ -2,7 +2,7 @@
 
 eph <- readRDS("fuentes/eph.rds")
 
-pacman::p_load(tidyverse, janitor, xlsx, Hmisc, sf, ggthemes, effectsize)
+pacman::p_load(tidyverse, janitor, openxlsx, Hmisc, sf, ggthemes, effectsize)
 
 # Arreglo variables ----------------
 eph <- eph %>%
@@ -102,14 +102,6 @@ eph <- eph %>%
                                  ANO4	==	2020	~	ing_lab_tot*	0.0134	*	1.5870,
                                  ANO4	==	2021	~	ing_lab_tot*	0.0101	*	1.5460))
 
-# Saco a los inactivos del análisis
-eph <- eph %>%
-  filter(cobhe != 9)
-
-
-# levels(eph$cobhe_f)[levels(eph$cobhe_f)=="Inactivos"] <- "Jubilados, pensionados y otros Inactivos"
-# levels(eph2020$cobhe_f)[levels(eph2020$cobhe_f)=="Inactivos"] <- "Jubilados, pensionados y otros Inactivos"
-
 eph$cobhe_f <- factor(eph$cobhe,
                       labels = c('Propietarios y directivos >5',
                                  'Propietarios y directivos <=5',
@@ -118,7 +110,16 @@ eph$cobhe_f <- factor(eph$cobhe,
                                  'Trabajadores manuales >5',
                                  'Trabajadores no manuales <=5',
                                  'Trabajadores manuales <=5',
-                                 'Cuenta propia no calificados'))
+                                 'Cuenta propia no calificados',
+                                 'Inactivos'))
+
+# Saco a los inactivos del análisis
+# eph <- eph %>%
+#   filter(cobhe != 9)
+
+
+
+
 
 #Preparación de mapa--------------
 argentina <- st_read("C:/Users/josed/OneDrive/Otros/proyectos_R/mapas/Codgeo_Pais_x_dpto_con_datos/argentina_n.shp")
@@ -156,36 +157,45 @@ tabla <- eph %>%
   filter(dominancia == 1 & CH06 >= 18) %>%
   group_by(ANO4, cobhe_f) %>%
   tally(PONDERA) %>%
-  spread(ANO4, value = n)
+  pivot_wider(id_cols = cobhe_f, names_from = ANO4, values_from = n,
+              names_vary = "slowest")
 
-sum_tab <- c("N", colSums(tabla[,-1]))
+suma <- tabla %>%
+  summarise(cobhe_f = "N",
+            across(where(is.numeric), sum, na.rm = TRUE))
+
 
 cuadro <- tabla %>%
   adorn_totals("row") %>%
   adorn_percentages("col") %>%
   adorn_pct_formatting(digits = 1, affix_sign = F) %>%
-  rbind(sum_tab) %>%
+  rbind(suma) %>%
   as.data.frame()
 
-write.xlsx(cuadro, "salidas/procesamientos_eph_2022.xlsx", sheetName = "estructura_año_hog", row.names = F)
+write.xlsx(cuadro, "salidas/procesamientos_eph_2022.xlsx", sheetName = "estructura_año_hog", rowNames = F, append = T)
+
+
 
 ### Individuos--------------
 tabla <- eph %>%
   filter(CH06 >= 18 & !is.na(cobhe)) %>%
   group_by(ANO4, cobhe_f) %>%
   tally(PONDERA) %>%
-  spread(ANO4, value = n)
+  pivot_wider(id_cols = cobhe_f, names_from = ANO4, values_from = n,
+              names_vary = "slowest")
 
-sum_tab <- c("N", colSums(tabla[,-1]))
+suma <- tabla %>%
+  summarise(cobhe_f = "N",
+            across(where(is.numeric), sum, na.rm = TRUE))
 
 cuadro <- tabla %>%
   adorn_totals("row") %>%
   adorn_percentages("col") %>%
   adorn_pct_formatting(digits = 1, affix_sign = F) %>%
-  rbind(sum_tab) %>%
+  rbind(suma) %>%
   as.data.frame()
 
-write.xlsx(cuadro, "salidas/procesamientos_eph_2022.xlsx", sheetName = "estructura_año_ind", row.names = F, append = T)
+write.xlsx(cuadro, "salidas/procesamientos_eph_2022.xlsx", sheetName = "estructura_año_ind", rowNames = F, append = T)
 
 
 ## Stocks sin inactivos-----------------
@@ -194,38 +204,42 @@ tabla <- eph %>%
   filter(dominancia == 1 & CH06 >= 18 & cobhe != 9) %>%
   group_by(ANO4, cobhe_f) %>%
   tally(PONDERA) %>%
-  spread(ANO4, value = n)
+  pivot_wider(id_cols = cobhe_f, names_from = ANO4, values_from = n,
+              names_vary = "slowest")
 
-sum_tab <- c("N", colSums(tabla[,-1]))
+suma <- tabla %>%
+  summarise(cobhe_f = "N",
+            across(where(is.numeric), sum, na.rm = TRUE))
 
 cuadro <- tabla %>%
   adorn_totals("row") %>%
   adorn_percentages("col") %>%
   adorn_pct_formatting(digits = 1, affix_sign = F) %>%
-  rbind(sum_tab) %>%
+  rbind(suma) %>%
   as.data.frame()
 
-write.xlsx(cuadro, "salidas/procesamientos_eph_2022.xlsx", sheetName = "estructura_año_hog_PEA", row.names = F, append = T)
+write.xlsx(cuadro, "salidas/procesamientos_eph_2022.xlsx", sheetName = "estructura_año_hog_PEA", rowNames = F, append = T)
 
 ### Individuos--------------
 tabla <- eph %>%
   filter(CH06 >= 18 & !is.na(cobhe) & cobhe != 9) %>%
   group_by(ANO4, cobhe_f) %>%
   tally(PONDERA) %>%
-  spread(ANO4, value = n)
+  pivot_wider(id_cols = cobhe_f, names_from = ANO4, values_from = n,
+              names_vary = "slowest")
 
-sum_tab <- c("N", colSums(tabla[,-1]))
+suma <- tabla %>%
+  summarise(cobhe_f = "N",
+            across(where(is.numeric), sum, na.rm = TRUE))
 
 cuadro <- tabla %>%
   adorn_totals("row") %>%
   adorn_percentages("col") %>%
   adorn_pct_formatting(digits = 1, affix_sign = F) %>%
-  rbind(sum_tab) %>%
+  rbind(suma) %>%
   as.data.frame()
 
 write.xlsx(cuadro, "salidas/procesamientos_eph_2022.xlsx", sheetName = "estructura_año_ind_PEA", row.names = F, append = T)
-
-
 
 ## Género ---------------
 ### Dominancia --------------
