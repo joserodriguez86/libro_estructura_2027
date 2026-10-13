@@ -5,6 +5,7 @@ eph <- readRDS("fuentes/eph.rds")
 pacman::p_load(tidyverse, janitor, openxlsx, Hmisc, sf, ggthemes, effectsize)
 
 # Arreglo variables ----------------
+
 eph <- eph %>%
   filter(CH04 > 0) %>%
   mutate(sexo = factor(CH04, labels = c("Varón", "Mujer")),
