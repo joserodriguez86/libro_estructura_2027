@@ -3,9 +3,12 @@
 
 eph <- readRDS("fuentes/eph.rds")
 
-pacman::p_load(tidyverse)
+pacman::p_load(tidyverse, eph, VIM)
 
 # COBHE para EPH ------------------
+
+## CAES
+
 #Uno los códigos y agrego ceros
 eph <- eph %>%
   mutate(rama4_ocup = ifelse(ANO4 >= 2011 & ANO4 <= 2015, PP04B_CAES, PP04B_COD),
@@ -144,7 +147,7 @@ eph <- eph %>%
                                       rama4_ocup=="9202" ~ "6300",
                                       rama4_ocup=="9204" ~ "9302",
                                       rama4_ocup=="9500" ~ "9700"),
-                            NA),
+                            rama4_ocup),
          caes_desocup = ifelse(ANO4 < 2011,
                                case_when(rama4_desocup=="1501" ~ "1001",
                                          rama4_desocup=="1502" ~ "1002",
@@ -272,9 +275,12 @@ eph <- eph %>%
                                          rama4_desocup=="9202" ~ "6300",
                                          rama4_desocup=="9204" ~ "9302",
                                          rama4_desocup=="9500" ~ "9700"),
-                               NA),
+                               rama4_desocup),
          caes2_ocup = as.numeric(str_sub(caes_ocup, 1, 2)),
          caes2_desocup = as.numeric(str_sub(caes_desocup, 1, 2)))
+
+eph <- eph %>%
+  mutate(caes2 = ifelse(is.na(caes2_ocup), caes2_desocup, caes2_ocup))
 
 
 ##Separo dígitos del CNO-----
