@@ -23,3 +23,7 @@ set.seed(971986)
 base_imputacion <- hotdeck(data = eph,
                             variable = "tamano",
                             domain_var = "caes2")
+
+seleccion <- eph %>%
+  filter(ESTADO %in% c(1,2)) %>%
+  select(ESTADO, categoria, caes2, tamano, tamano_imputado)

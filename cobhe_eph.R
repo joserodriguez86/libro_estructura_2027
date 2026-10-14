@@ -7,7 +7,7 @@ pacman::p_load(tidyverse, eph, VIM)
 
 # COBHE para EPH ------------------
 
-## CAES
+## CAES ---------------
 
 #Uno los códigos y agrego ceros
 eph <- eph %>%
@@ -283,6 +283,7 @@ eph <- eph %>%
   mutate(caes2 = ifelse(is.na(caes2_ocup), caes2_desocup, caes2_ocup))
 
 
+
 ##Separo dígitos del CNO-----
 eph$cno <- ifelse(is.na(eph$PP04D_COD), eph$PP11D_COD, eph$PP04D_COD)
 
@@ -324,6 +325,25 @@ eph <- eph %>%
 
 eph$tamano <- ifelse(is.na(eph$tamano), eph$tamano_desocup, eph$tamano)
 
+## Imputación
+base_imputacion <- eph %>%
+  filter(ESTADO %in% c(1,2))
+
+
+set.seed(971986)
+
+base_imputacion <- hotdeck(data = base_imputacion,
+                           variable = "tamano",
+                           domain_var = "caes2")
+
+base_imputacion <- base_imputacion %>%
+  mutate(tamano_imputado = tamano) %>%
+  select(CODUSU, NRO_HOGAR, COMPONENTE, ANO4, TRIMESTRE, tamano_imputado)
+
+eph <- eph %>%
+  left_join(base_imputacion, by = c("CODUSU", "NRO_HOGAR", "COMPONENTE", "ANO4", "TRIMESTRE"))
+
+rm(base_imputacion)
 
 ## Clasificador --------------
 
@@ -352,90 +372,90 @@ eph <- eph %>%
                           cno12 == 35 & categoria == 2 & cno5 > 2 & cno4 > 1 ~ 3,
 
                           #Clase IV: trabajadores no manuales > 5
-                          (cno12 >= 10 & cno12 <= 20) & categoria == 3 & tamano == 2 ~ 4,
-                          cno12 == 30 & categoria == 3 & tamano == 2 ~ 4,
-                          (cno12 == 31 | cno12 == 32) & categoria == 3 & tamano == 2 & cno5 <= 3 ~ 4,
-                          cno12 == 35 & categoria == 3 & tamano == 2 & cno5 <= 3 ~ 4,
-                          cno12 == 36 & categoria == 3 & tamano == 2 & cno5 <= 2 ~ 4,
-                          (cno12 >= 40 & cno12 <= 43) & categoria == 3 & tamano == 2 ~ 4,
-                          cno12 == 44 & categoria == 3 & tamano == 2 & cno5 <= 2 ~ 4,
-                          (cno12 == 45 | cno12 == 46) & categoria == 3 & tamano == 2 ~ 4,
-                          (cno12 >= 47 & cno12 <= 49) & categoria == 3 & tamano == 2 & cno5 <= 2 ~ 4,
-                          (cno12 == 50 | cno12 == 52) & categoria == 3 & tamano == 2 ~ 4,
-                          cno12 == 54 & categoria == 3 & tamano == 2 & cno5 <= 3 ~ 4,
-                          cno12 == 58 & categoria == 3 & tamano == 2 & cno5 <= 2 ~ 4,
-                          (cno12 >= 60 & cno12 <= 63) & categoria == 3 & tamano == 2 & cno5 <= 2 & cno4 != 2 ~ 4,
-                          (cno12 >= 70 & cno12 <= 72) & categoria == 3 & tamano == 2 & cno5 <= 2 & cno4 != 2 ~ 4,
-                          cno12 == 80 & categoria == 3 & tamano == 2 & cno5 <= 2 & cno4 != 2 ~ 4,
-                          cno12 == 81 & categoria == 3 & tamano == 2 ~ 4,
-                          cno12 == 91 & categoria == 3 & tamano == 2 ~ 4,
-                          cno12 == 92 & categoria == 3 & tamano == 2 & cno5 == 1 ~ 4,
+                          (cno12 >= 10 & cno12 <= 20) & categoria == 3 & tamano_imputado == 2 ~ 4,
+                          cno12 == 30 & categoria == 3 & tamano_imputado == 2 ~ 4,
+                          (cno12 == 31 | cno12 == 32) & categoria == 3 & tamano_imputado == 2 & cno5 <= 3 ~ 4,
+                          cno12 == 35 & categoria == 3 & tamano_imputado == 2 & cno5 <= 3 ~ 4,
+                          cno12 == 36 & categoria == 3 & tamano_imputado == 2 & cno5 <= 2 ~ 4,
+                          (cno12 >= 40 & cno12 <= 43) & categoria == 3 & tamano_imputado == 2 ~ 4,
+                          cno12 == 44 & categoria == 3 & tamano_imputado == 2 & cno5 <= 2 ~ 4,
+                          (cno12 == 45 | cno12 == 46) & categoria == 3 & tamano_imputado == 2 ~ 4,
+                          (cno12 >= 47 & cno12 <= 49) & categoria == 3 & tamano_imputado == 2 & cno5 <= 2 ~ 4,
+                          (cno12 == 50 | cno12 == 52) & categoria == 3 & tamano_imputado == 2 ~ 4,
+                          cno12 == 54 & categoria == 3 & tamano_imputado == 2 & cno5 <= 3 ~ 4,
+                          cno12 == 58 & categoria == 3 & tamano_imputado == 2 & cno5 <= 2 ~ 4,
+                          (cno12 >= 60 & cno12 <= 63) & categoria == 3 & tamano_imputado == 2 & cno5 <= 2 & cno4 != 2 ~ 4,
+                          (cno12 >= 70 & cno12 <= 72) & categoria == 3 & tamano_imputado == 2 & cno5 <= 2 & cno4 != 2 ~ 4,
+                          cno12 == 80 & categoria == 3 & tamano_imputado == 2 & cno5 <= 2 & cno4 != 2 ~ 4,
+                          cno12 == 81 & categoria == 3 & tamano_imputado == 2 ~ 4,
+                          cno12 == 91 & categoria == 3 & tamano_imputado == 2 ~ 4,
+                          cno12 == 92 & categoria == 3 & tamano_imputado == 2 & cno5 == 1 ~ 4,
 
                           #Clase V: trabajadores manuales > 5
-                          (cno12 == 31 | cno12 == 32) & categoria == 3 & tamano == 2 & cno5 == 4 ~ 5,
-                          cno12 == 34 & categoria == 3 & tamano == 2 ~ 5,
-                          cno12 == 35 & categoria == 3 & tamano == 2 & cno5 == 4 ~ 5,
-                          cno12 == 36 & categoria == 3 & tamano == 2 & cno5 > 2 ~ 5,
-                          cno12 == 44 & categoria == 3 & tamano == 2 & cno5 > 2 ~ 5,
-                          (cno12 >= 47 & cno12 <= 49) & categoria == 3 & tamano == 2 & cno5 > 2 ~ 5,
-                          cno12 == 51 & categoria == 3 & tamano == 2 ~ 5,
-                          cno12 == 53 & categoria == 3 & tamano == 2 ~ 5,
-                          cno12 == 54 & categoria == 3 & tamano == 2 & cno5 == 4 ~ 5,
-                          (cno12 == 56 | cno12 == 57)  & categoria == 3 & tamano == 2 ~ 5,
-                          cno12 == 58 & categoria == 3 & tamano == 2 & cno5 > 2 ~ 5,
-                          (cno12 >= 60 & cno12 <= 63) & categoria == 3 & tamano == 2 & cno5 <= 2 & cno4 == 2 ~ 5,
-                          (cno12 >= 60 & cno12 <= 63) & categoria == 3 & tamano == 2 & cno5 > 2 ~ 5,
-                          (cno12 == 64 | cno12 == 65)  & categoria == 3 & tamano == 2 ~ 5,
-                          (cno12 >= 70 & cno12 <= 72) & categoria == 3 & tamano == 2 & cno5 <= 2 & cno4 == 2 ~ 5,
-                          (cno12 >= 70 & cno12 <= 72) & categoria == 3 & tamano == 2 & cno5 > 2 ~ 5,
-                          cno12 == 80 & categoria == 3 & tamano == 2 & cno5 <= 2 & cno4 == 2 ~ 5,
-                          cno12 == 80 & categoria == 3 & tamano == 2 & cno5 > 2 ~ 5,
-                          (cno12 == 82 | cno12 == 90) & categoria == 3 & tamano == 2  ~ 5,
-                          cno12 == 92 & categoria == 3 & tamano == 2 & cno5 > 1 ~ 5,
+                          (cno12 == 31 | cno12 == 32) & categoria == 3 & tamano_imputado == 2 & cno5 == 4 ~ 5,
+                          cno12 == 34 & categoria == 3 & tamano_imputado == 2 ~ 5,
+                          cno12 == 35 & categoria == 3 & tamano_imputado == 2 & cno5 == 4 ~ 5,
+                          cno12 == 36 & categoria == 3 & tamano_imputado == 2 & cno5 > 2 ~ 5,
+                          cno12 == 44 & categoria == 3 & tamano_imputado == 2 & cno5 > 2 ~ 5,
+                          (cno12 >= 47 & cno12 <= 49) & categoria == 3 & tamano_imputado == 2 & cno5 > 2 ~ 5,
+                          cno12 == 51 & categoria == 3 & tamano_imputado == 2 ~ 5,
+                          cno12 == 53 & categoria == 3 & tamano_imputado == 2 ~ 5,
+                          cno12 == 54 & categoria == 3 & tamano_imputado == 2 & cno5 == 4 ~ 5,
+                          (cno12 == 56 | cno12 == 57)  & categoria == 3 & tamano_imputado == 2 ~ 5,
+                          cno12 == 58 & categoria == 3 & tamano_imputado == 2 & cno5 > 2 ~ 5,
+                          (cno12 >= 60 & cno12 <= 63) & categoria == 3 & tamano_imputado == 2 & cno5 <= 2 & cno4 == 2 ~ 5,
+                          (cno12 >= 60 & cno12 <= 63) & categoria == 3 & tamano_imputado == 2 & cno5 > 2 ~ 5,
+                          (cno12 == 64 | cno12 == 65)  & categoria == 3 & tamano_imputado == 2 ~ 5,
+                          (cno12 >= 70 & cno12 <= 72) & categoria == 3 & tamano_imputado == 2 & cno5 <= 2 & cno4 == 2 ~ 5,
+                          (cno12 >= 70 & cno12 <= 72) & categoria == 3 & tamano_imputado == 2 & cno5 > 2 ~ 5,
+                          cno12 == 80 & categoria == 3 & tamano_imputado == 2 & cno5 <= 2 & cno4 == 2 ~ 5,
+                          cno12 == 80 & categoria == 3 & tamano_imputado == 2 & cno5 > 2 ~ 5,
+                          (cno12 == 82 | cno12 == 90) & categoria == 3 & tamano_imputado == 2  ~ 5,
+                          cno12 == 92 & categoria == 3 & tamano_imputado == 2 & cno5 > 1 ~ 5,
 
                           #Clase VI: trabajadores no manuales < 5
-                          (cno12 >= 10 & cno12 <= 20) & categoria == 3 & tamano == 1 ~ 6,
-                          cno12 == 30 & categoria == 3 & tamano == 1 ~ 6,
-                          (cno12 == 31 | cno12 == 32) & categoria == 3 & tamano == 1 & cno5 <= 3 ~ 6,
-                          cno12 == 35 & categoria == 3 & tamano == 1 & cno5 <= 3 ~ 6,
-                          cno12 == 36 & categoria == 3 & tamano == 1 & cno5 <= 2 ~ 6,
-                          (cno12 >= 40 & cno12 <= 43) & categoria == 3 & tamano == 1 ~ 6,
-                          cno12 == 44 & categoria == 3 & tamano == 1 & cno5 <= 2 ~ 6,
-                          (cno12 == 45 | cno12 == 46) & categoria == 3 & tamano == 1 ~ 6,
-                          (cno12 >= 47 & cno12 <= 49) & categoria == 3 & tamano == 1 & cno5 <= 2 ~ 6,
-                          (cno12 == 50 | cno12 == 52) & categoria == 3 & tamano == 1 ~ 6,
-                          cno12 == 54 & categoria == 3 & tamano == 1 & cno5 <= 3 ~ 6,
-                          cno12 == 58 & categoria == 3 & tamano == 1 & cno5 <= 2 ~ 6,
-                          (cno12 >= 60 & cno12 <= 63) & categoria == 3 & tamano == 1 & cno5 <= 2 & cno4 != 2 ~ 6,
-                          (cno12 >= 70 & cno12 <= 72) & categoria == 3 & tamano == 1 & cno5 <= 2 & cno4 != 2 ~ 6,
-                          cno12 == 80 & categoria == 3 & tamano == 1 & cno5 <= 2 & cno4 != 2 ~ 6,
-                          cno12 == 81 & categoria == 3 & tamano == 1 ~ 6,
-                          cno12 == 91 & categoria == 3 & tamano == 1 ~ 6,
-                          cno12 == 92 & categoria == 3 & tamano == 1 & cno5 == 1 ~ 6,
+                          (cno12 >= 10 & cno12 <= 20) & categoria == 3 & tamano_imputado == 1 ~ 6,
+                          cno12 == 30 & categoria == 3 & tamano_imputado == 1 ~ 6,
+                          (cno12 == 31 | cno12 == 32) & categoria == 3 & tamano_imputado == 1 & cno5 <= 3 ~ 6,
+                          cno12 == 35 & categoria == 3 & tamano_imputado == 1 & cno5 <= 3 ~ 6,
+                          cno12 == 36 & categoria == 3 & tamano_imputado == 1 & cno5 <= 2 ~ 6,
+                          (cno12 >= 40 & cno12 <= 43) & categoria == 3 & tamano_imputado == 1 ~ 6,
+                          cno12 == 44 & categoria == 3 & tamano_imputado == 1 & cno5 <= 2 ~ 6,
+                          (cno12 == 45 | cno12 == 46) & categoria == 3 & tamano_imputado == 1 ~ 6,
+                          (cno12 >= 47 & cno12 <= 49) & categoria == 3 & tamano_imputado == 1 & cno5 <= 2 ~ 6,
+                          (cno12 == 50 | cno12 == 52) & categoria == 3 & tamano_imputado == 1 ~ 6,
+                          cno12 == 54 & categoria == 3 & tamano_imputado == 1 & cno5 <= 3 ~ 6,
+                          cno12 == 58 & categoria == 3 & tamano_imputado == 1 & cno5 <= 2 ~ 6,
+                          (cno12 >= 60 & cno12 <= 63) & categoria == 3 & tamano_imputado == 1 & cno5 <= 2 & cno4 != 2 ~ 6,
+                          (cno12 >= 70 & cno12 <= 72) & categoria == 3 & tamano_imputado == 1 & cno5 <= 2 & cno4 != 2 ~ 6,
+                          cno12 == 80 & categoria == 3 & tamano_imputado == 1 & cno5 <= 2 & cno4 != 2 ~ 6,
+                          cno12 == 81 & categoria == 3 & tamano_imputado == 1 ~ 6,
+                          cno12 == 91 & categoria == 3 & tamano_imputado == 1 ~ 6,
+                          cno12 == 92 & categoria == 3 & tamano_imputado == 1 & cno5 == 1 ~ 6,
 
                           #Clase VII: trabajadores manuales < 5
-                          (cno12 == 31 | cno12 == 32) & categoria == 3 & tamano == 1 & cno5 == 4 ~ 7,
-                          cno12 == 34 & categoria == 3 & tamano == 1 ~ 7,
-                          cno12 == 35 & categoria == 3 & tamano == 1 & cno5 == 4 ~ 7,
-                          cno12 == 36 & categoria == 3 & tamano == 1 & cno5 > 2 ~ 7,
-                          cno12 == 44 & categoria == 3 & tamano == 1 & cno5 > 2 ~ 7,
-                          (cno12 >= 47 & cno12 <= 49) & categoria == 3 & tamano == 1 & cno5 > 2 ~ 7,
-                          cno12 == 51 & categoria == 3 & tamano == 1 ~ 7,
-                          cno12 == 53 & categoria == 3 & tamano == 1 ~ 7,
-                          cno12 == 54 & categoria == 3 & tamano == 1 & cno5 == 4 ~ 7,
-                          (cno12 == 56 | cno12 == 57)  & categoria == 3 & tamano == 1 ~ 7,
-                          cno12 == 58 & categoria == 3 & tamano == 1 & cno5 > 2 ~ 7,
-                          (cno12 >= 60 & cno12 <= 63) & categoria == 3 & tamano == 1 & cno5 <= 2 & cno4 == 2 ~ 7,
-                          (cno12 >= 60 & cno12 <= 63) & categoria == 3 & tamano == 1 & cno5 > 2 ~ 7,
-                          (cno12 == 64 | cno12 == 65)  & categoria == 3 & tamano == 1 ~ 7,
-                          (cno12 >= 70 & cno12 <= 72) & categoria == 3 & tamano == 1 & cno5 <= 2 & cno4 == 2 ~ 7,
-                          (cno12 >= 70 & cno12 <= 72) & categoria == 3 & tamano == 1 & cno5 > 2 ~ 7,
-                          cno12 == 80 & categoria == 3 & tamano == 1 & cno5 <= 2 & cno4 == 2 ~ 7,
-                          cno12 == 80 & categoria == 3 & tamano == 1 & cno5 > 2 ~ 7,
-                          (cno12 == 82 | cno12 == 90) & categoria == 3 & tamano == 1  ~ 7,
-                          cno12 == 92 & categoria == 3 & tamano == 1 & cno5 > 1 ~ 7,
+                          (cno12 == 31 | cno12 == 32) & categoria == 3 & tamano_imputado == 1 & cno5 == 4 ~ 7,
+                          cno12 == 34 & categoria == 3 & tamano_imputado == 1 ~ 7,
+                          cno12 == 35 & categoria == 3 & tamano_imputado == 1 & cno5 == 4 ~ 7,
+                          cno12 == 36 & categoria == 3 & tamano_imputado == 1 & cno5 > 2 ~ 7,
+                          cno12 == 44 & categoria == 3 & tamano_imputado == 1 & cno5 > 2 ~ 7,
+                          (cno12 >= 47 & cno12 <= 49) & categoria == 3 & tamano_imputado == 1 & cno5 > 2 ~ 7,
+                          cno12 == 51 & categoria == 3 & tamano_imputado == 1 ~ 7,
+                          cno12 == 53 & categoria == 3 & tamano_imputado == 1 ~ 7,
+                          cno12 == 54 & categoria == 3 & tamano_imputado == 1 & cno5 == 4 ~ 7,
+                          (cno12 == 56 | cno12 == 57)  & categoria == 3 & tamano_imputado == 1 ~ 7,
+                          cno12 == 58 & categoria == 3 & tamano_imputado == 1 & cno5 > 2 ~ 7,
+                          (cno12 >= 60 & cno12 <= 63) & categoria == 3 & tamano_imputado == 1 & cno5 <= 2 & cno4 == 2 ~ 7,
+                          (cno12 >= 60 & cno12 <= 63) & categoria == 3 & tamano_imputado == 1 & cno5 > 2 ~ 7,
+                          (cno12 == 64 | cno12 == 65)  & categoria == 3 & tamano_imputado == 1 ~ 7,
+                          (cno12 >= 70 & cno12 <= 72) & categoria == 3 & tamano_imputado == 1 & cno5 <= 2 & cno4 == 2 ~ 7,
+                          (cno12 >= 70 & cno12 <= 72) & categoria == 3 & tamano_imputado == 1 & cno5 > 2 ~ 7,
+                          cno12 == 80 & categoria == 3 & tamano_imputado == 1 & cno5 <= 2 & cno4 == 2 ~ 7,
+                          cno12 == 80 & categoria == 3 & tamano_imputado == 1 & cno5 > 2 ~ 7,
+                          (cno12 == 82 | cno12 == 90) & categoria == 3 & tamano_imputado == 1  ~ 7,
+                          cno12 == 92 & categoria == 3 & tamano_imputado == 1 & cno5 > 1 ~ 7,
                           cno12 == 55 ~ 7,
-                          is.na(tamano) & PP04B1 == 1 ~ 7,
+                          is.na(tamano_imputado) & PP04B1 == 1 ~ 7,
 
                           #Clase VIII: Cuenta propia semi-calificados y no calificados
                           (cno12 == 10 | cno12 == 32 | cno12 == 51 | cno12 == 52 | cno12 == 53 |

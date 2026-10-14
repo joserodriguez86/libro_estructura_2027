@@ -1,6 +1,6 @@
 # Librerías y bases de datos
 
-eph <- readRDS("fuentes/eph.rds")
+eph <- readRDS("fuentes/eph_clase.rds")
 
 pacman::p_load(tidyverse, janitor, openxlsx, Hmisc, sf, ggthemes, effectsize)
 
