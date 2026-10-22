@@ -4,8 +4,50 @@ eph <- readRDS("fuentes/eph_clase.rds")
 
 pacman::p_load(tidyverse, janitor, openxlsx, Hmisc, sf, ggthemes, effectsize)
 
-# Arreglo variables ----------------
+#IPC
+ipc <- read.csv("https://infra.datos.gob.ar/catalog/sspm/dataset/145/distribution/145.1/download/indice-precios-al-consumidor-nivel-general-base-diciembre-2016-trimestral.csv")
 
+
+# Preprocesamiento ----------------
+
+ipc <- ipc %>%
+  select(indice_tiempo, ipc_ng_nacional)
+
+ipc$indice_tiempo <- ymd(ipc$indice_tiempo)
+
+ipc <- ipc %>%
+  mutate(
+    ipc_actual = (ipc_ng_nacional / ipc_ng_nacional[which(ipc$indice_tiempo == ymd("2025-04-01"))] * 100), #PONER ACÁ EL TRIMESTRE DESDE DONDE SE DEFLACTA
+    anio = year(indice_tiempo),
+    trimestre = quarter(indice_tiempo),  # sin with_label
+    trimestre = case_when(
+      trimestre == 1 ~ "I",
+      trimestre == 2 ~ "II",
+      trimestre == 3 ~ "III",
+      trimestre == 4 ~ "IV"
+    )
+  )
+
+#variables de fecha
+eph <- eph %>%
+  mutate(semestre = case_when(TRIMESTRE <= 2 ~ 1,
+                              TRIMESTRE > 2 ~ 2),
+         trim = case_when(TRIMESTRE == 1 ~ "I",
+                          TRIMESTRE == 2 ~ "II",
+                          TRIMESTRE == 3 ~ "III",
+                          TRIMESTRE == 4 ~ "IV"),
+         ano2 = str_sub(as.character(ANO4), 3, 4),
+         ano_trim = paste(as.character(ANO4), as.character(trim), sep = "-"),
+         ano_sem = paste(as.character(ANO4), as.character(semestre), sep = "-"))
+
+ipc <- ipc %>%
+  mutate(ano_trim = paste(as.character(anio), as.character(trimestre), sep = "-")) %>%
+  select(ano_trim, ipc_actual)
+
+eph <- eph %>%
+  left_join(ipc, by = "ano_trim")
+
+#Variables construidas
 eph <- eph %>%
   filter(CH04 > 0) %>%
   mutate(sexo = factor(CH04, labels = c("Varón", "Mujer")),
@@ -38,70 +80,31 @@ eph <- eph %>%
                                      TRUE ~ 0),
          IX_MEN10 = ifelse(ANO4 == 2003 & is.na(IX_MEN10), 0, IX_MEN10),
          no_lab = ifelse(T_VI < 0, 0, T_VI),
-         itf_ppa = case_when(ANO4	==	2003	~	ITF*	0.3503	*	1.6962,
-                             ANO4	==	2004	~	ITF*	0.3346	*	1.6498,
-                             ANO4	==	2005	~	ITF*	0.3464	*	1.6234,
-                             ANO4	==	2006	~	ITF*	0.3240	*	1.6041,
-                             ANO4	==	2007	~	ITF*	0.3181	*	1.5627,
-                             ANO4	==	2008	~	ITF*	0.3281	*	1.4817,
-                             ANO4	==	2009	~	ITF*	0.2614	*	1.4965,
-                             ANO4	==	2010	~	ITF*	0.2536	*	1.4250,
-                             ANO4	==	2011	~	ITF*	0.2393	*	1.3350,
-                             ANO4	==	2012	~	ITF*	0.2173	*	1.3339,
-                             ANO4	==	2013	~	ITF*	0.1797	*	1.3503,
-                             ANO4	==	2014	~	ITF*	0.1213	*	1.3734,
-                             ANO4	==	2015	~	ITF*	0.1086	*	1.3142,
-                             ANO4	==	2016	~	ITF*	0.0669	*	1.3702,
-                             ANO4	==	2017	~	ITF*	0.0579	*	1.3807,
-                             ANO4	==	2018	~	ITF*	0.0320	*	1.4936,
-                             ANO4	==	2019	~	ITF*	0.0203	*	1.5627,
-                             ANO4	==	2020	~	ITF*	0.0134	*	1.5870,
-                             ANO4	==	2021	~	ITF*	0.0101	*	1.5460),
          ipcf = ifelse(ANO4 == 2020, ITF/IX_TOT, IPCF),
-         ipcf_ppa = case_when(ANO4	==	2003	~	ipcf*	0.3503	*	1.6962,
-                             ANO4	==	2004	~	ipcf*	0.3346	*	1.6498,
-                             ANO4	==	2005	~	ipcf*	0.3464	*	1.6234,
-                             ANO4	==	2006	~	ipcf*	0.3240	*	1.6041,
-                             ANO4	==	2007	~	ipcf*	0.3181	*	1.5627,
-                             ANO4	==	2008	~	ipcf*	0.3281	*	1.4817,
-                             ANO4	==	2009	~	ipcf*	0.2614	*	1.4965,
-                             ANO4	==	2010	~	ipcf*	0.2536	*	1.4250,
-                             ANO4	==	2011	~	ipcf*	0.2393	*	1.3350,
-                             ANO4	==	2012	~	ipcf*	0.2173	*	1.3339,
-                             ANO4	==	2013	~	ipcf*	0.1797	*	1.3503,
-                             ANO4	==	2014	~	ipcf*	0.1213	*	1.3734,
-                             ANO4	==	2015	~	ipcf*	0.1086	*	1.3142,
-                             ANO4	==	2016	~	ipcf*	0.0669	*	1.3702,
-                             ANO4	==	2017	~	ipcf*	0.0579	*	1.3807,
-                             ANO4	==	2018	~	ipcf*	0.0320	*	1.4936,
-                             ANO4	==	2019	~	ipcf*	0.0203	*	1.5627,
-                             ANO4	==	2020	~	ipcf*	0.0134	*	1.5870,
-                             ANO4	==	2021	~	ipcf*	0.0101	*	1.5460)) %>%
+         horas = PP3E_TOT + PP3F_TOT,
+         horas = ifelse(horas <= 0 | horas > 168, NA_real_, horas)) %>%
   group_by(ANO4, TRIMESTRE, CODUSU, NRO_HOGAR) %>%
   mutate(ing_nolab_tot = sum(no_lab),
          menores0_14 = ifelse(CH06 < 14, 1, 0),
          menores0_14 = sum(menores0_14)) %>%
+  ungroup()
+
+#ingresos
+eph <- eph %>%
+  group_by(ano_trim, CODUSU, NRO_HOGAR) %>%
+  mutate(miembros = n(),
+         ocupados = sum(ESTADO == 1) / sum(CH06 >= 14)) %>%
   ungroup() %>%
-  mutate(ing_lab_tot = ITF - ing_nolab_tot,
-         ing_lab_ppa = case_when(ANO4	==	2003	~	ing_lab_tot*	0.3503	*	1.6962,
-                                 ANO4	==	2004	~	ing_lab_tot*	0.3346	*	1.6498,
-                                 ANO4	==	2005	~	ing_lab_tot*	0.3464	*	1.6234,
-                                 ANO4	==	2006	~	ing_lab_tot*	0.3240	*	1.6041,
-                                 ANO4	==	2007	~	ing_lab_tot*	0.3181	*	1.5627,
-                                 ANO4	==	2008	~	ing_lab_tot*	0.3281	*	1.4817,
-                                 ANO4	==	2009	~	ing_lab_tot*	0.2614	*	1.4965,
-                                 ANO4	==	2010	~	ing_lab_tot*	0.2536	*	1.4250,
-                                 ANO4	==	2011	~	ing_lab_tot*	0.2393	*	1.3350,
-                                 ANO4	==	2012	~	ing_lab_tot*	0.2173	*	1.3339,
-                                 ANO4	==	2013	~	ing_lab_tot*	0.1797	*	1.3503,
-                                 ANO4	==	2014	~	ing_lab_tot*	0.1213	*	1.3734,
-                                 ANO4	==	2015	~	ing_lab_tot*	0.1086	*	1.3142,
-                                 ANO4	==	2016	~	ing_lab_tot*	0.0669	*	1.3702,
-                                 ANO4	==	2017	~	ing_lab_tot*	0.0579	*	1.3807,
-                                 ANO4	==	2018	~	ing_lab_tot*	0.0320	*	1.4936,
-                                 ANO4	==	2019	~	ing_lab_tot*	0.0203	*	1.5627,
-                                 ANO4	==	2020	~	ing_lab_tot*	0.0134	*	1.5870,
-                                 ANO4	==	2021	~	ing_lab_tot*	0.0101	*	1.5460))
+  mutate(ipcf2 = ITF / miembros,
+         ipcf2024 = (ipcf2 / ipc_actual)*100,
+         iti2024 = (P47T / ipc_actual)*100,
+         p21_2024 = (P21 / ipc_actual)*100,
+         ingresos_lab1 = ifelse(P21 == -9, 0, P21),
+         ingresos_lab2 = ifelse(TOT_P12 == -9, 0, TOT_P12),
+         ing_lab = ingresos_lab1 + ingresos_lab2,
+         ing_horario = ing_lab / (horas * 4.3),
+         ing_lab2024 = (ing_lab / ipc_actual)*100,
+         ing_horario2024 = (ing_horario / ipc_actual)*100)
 
 eph$cobhe_f <- factor(eph$cobhe,
                       labels = c('Propietarios y directivos >5',

@@ -481,11 +481,11 @@ eph <- eph %>%
                           ))
 
 eph$cobhe_f <- factor(eph$cobhe,
-       labels = c('Propietarios y directivos >5',
+       labels = c('Propietarios y directivos >=5',
                   'Propietarios y directivos <5',
                   'Cuenta propia profesionales / calificados',
-                  'Trabajadores no manuales >5',
-                  'Trabajadores manuales >5',
+                  'Trabajadores no manuales >=5',
+                  'Trabajadores manuales >=5',
                   'Trabajadores no manuales <5',
                   'Trabajadores manuales <5',
                   'Cuenta propia no calificados',
