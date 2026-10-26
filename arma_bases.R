@@ -2,13 +2,14 @@
 pacman::p_load(tidyverse, eph)
 
 # Carga de EPH ------
-eph_individual <- get_microdata(year = 2003:2026,
-                                type = "individual",
-                                trimester = 2)
 
-eph_hogar <- get_microdata(year = 2003:2026,
+eph_individual <- get_microdata(year = 2016:2026,
+                                type = "individual",
+                                period = c(1,3))
+
+eph_hogar <- get_microdata(year = 2016:2026,
                            type = "hogar",
-                           trimester = 2)
+                           period = c(1,3))
 
 
 eph_hogar <- eph_hogar %>%
@@ -41,15 +42,15 @@ eph$PP11D_COD <- str_pad(eph$PP11D_COD, 5, pad = "0")
 
 
 #Selección de variable-----------
-eph <- eph %>%
-  select(CODUSU, NRO_HOGAR, COMPONENTE, ANO4,
-         TRIMESTRE, REGION, PONDERA, PONDIH,PONDII, PONDIIO, CH03, CH04,
-         CH06, CH08, CH12, CH13, ESTADO, CAT_OCUP, CAT_INAC,
-         PP02H, PP02I, PP3E_TOT, PP3F_TOT, INTENSI,
-         PP04A, PP04B_COD, PP04B_CAES, PP04B1, PP04C, PP04C99, PP04D_COD,
-         PP07H, PP07I, PP10A, PP10E, PP11A, PP11B_COD, PP11B_CAES,
-         PP11C, PP11C99, PP11D_COD, P21, TOT_P12, P47T, T_VI, ITF, IPCF, PONDIH_emp, PONDII_emp,
-         PONDIIO_emp, IX_TOT, IX_MEN10, II1, II2, II7,
-         IV3, IV4, IV5, IV7, IV11, IV12_1, IV12_2, IV12_3)
+# eph <- eph %>%
+#   select(CODUSU, NRO_HOGAR, COMPONENTE, ANO4,
+#          TRIMESTRE, REGION, PONDERA, PONDIH,PONDII, PONDIIO, CH03, CH04,
+#          CH06, CH08, CH12, CH13, ESTADO, CAT_OCUP, CAT_INAC,
+#          PP02H, PP02I, PP3E_TOT, PP3F_TOT, INTENSI,
+#          PP04A, PP04B_COD, PP04B_CAES, PP04B1, PP04C, PP04C99, PP04D_COD,
+#          PP07H, PP07I, PP10A, PP10E, PP11A, PP11B_COD, PP11B_CAES,
+#          PP11C, PP11C99, PP11D_COD, P21, TOT_P12, P47T, T_VI, ITF, IPCF, PONDIH_emp, PONDII_emp,
+#          PONDIIO_emp, IX_TOT, IX_MEN10, II1, II2, II7,
+#          IV3, IV4, IV5, IV7, IV11, IV12_1, IV12_2, IV12_3)
 
 saveRDS(eph, file = "fuentes/eph.rds")
